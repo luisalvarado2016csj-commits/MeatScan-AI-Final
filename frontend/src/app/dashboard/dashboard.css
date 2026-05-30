@@ -1,0 +1,32 @@
+.container {
+  max-width: 1200px;
+}
+
+.card {
+  transition: transform 0.2s;
+  border-radius: 12px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.display-1 {
+  font-size: 5rem;
+  letter-spacing: -2px;
+}
+
+.x-small {
+  font-size: 0.75rem;
+}
+
+.progress {
+  border-radius: 10px;
+  background-color: #e9ecef;
+}
+
+.nav-tabs .nav-link.active {
+  border: none;
+  border-bottom: 3px solid #0d6efd;
+  color: #0d6efd !important;
+}

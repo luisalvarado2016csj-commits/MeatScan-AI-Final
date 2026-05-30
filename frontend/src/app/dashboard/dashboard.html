@@ -1,0 +1,152 @@
+<!-- Barra de Navegación -->
+<nav class="navbar navbar-dark bg-dark shadow px-4">
+  <span class="navbar-brand mb-0 h1">
+    <i class="bi bi-snow2 me-2"></i>MeatScan AI - Plataforma de Control Térmico
+  </span>
+  <div class="ms-auto text-white small">
+    <i class="bi bi-person-circle me-1"></i> Analista: Arturo Alvarado
+  </div>
+</nav>
+
+<div class="container mt-4">
+  <!-- 1. Estructura de Navegación (Tabs) -->
+  <ul class="nav nav-tabs mb-4 border-0" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active fw-bold" data-bs-toggle="tab" type="button">
+        <i class="bi bi-speedometer2 me-2"></i>Panel de Control
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link text-muted" data-bs-toggle="tab" type="button">
+        <i class="bi bi-archive me-2"></i>Historial de Análisis
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link text-muted" data-bs-toggle="tab" type="button">
+        <i class="bi bi-file-earmark-text me-2"></i>Documentación
+      </button>
+    </li>
+  </ul>
+
+  <!-- 2. Tarjetas de Resumen -->
+  <div class="row mb-4 text-center">
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 p-3 bg-white">
+        <h6 class="text-muted">Total Escaneos</h6>
+        <h2 class="fw-bold">128</h2>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 p-3 bg-white border-start border-danger border-4">
+        <h6 class="text-muted">Alertas Recientes</h6>
+        <h2 class="fw-bold text-danger">5</h2>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm border-0 p-3 bg-white border-start border-success border-4">
+        <h6 class="text-muted">Estado del Modelo</h6>
+        <h2 class="fw-bold text-success">Online (v1.0.2)</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Fila Principal: Análisis e Imagen -->
+  <div class="row">
+    <!-- Panel de Imagen -->
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-primary text-white fw-bold">Captura Térmica (FLIR)</div>
+        <div class="card-body text-center">
+          <div class="border rounded p-2 mb-3 bg-light d-flex align-items-center justify-content-center" style="min-height: 300px;">
+            <img *ngIf="imagePreview" [src]="imagePreview" class="img-fluid rounded shadow-sm" style="max-height: 100%;">
+            <i *ngIf="!imagePreview" class="bi bi-camera text-muted" style="font-size: 4rem;"></i>
+          </div>
+          <input type="file" (change)="onFileSelected($event)" id="fileInput" hidden accept="image/*">
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-dark fw-bold" onclick="document.getElementById('fileInput').click()">
+              <i class="bi bi-upload me-2"></i>Subir Imagen
+            </button>
+            <button class="btn btn-success fw-bold" (click)="analizar()" [disabled]="!selectedFile">
+              <i class="bi bi-cpu me-2"></i>Ejecutar Predicción CNN
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel de Resultados -->
+    <div class="col-md-6 mb-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-dark text-white fw-bold">Resultados del Diagnóstico</div>
+        <div class="card-body d-flex flex-column justify-content-center">
+          <div class="text-center py-4">
+            <h1 [class]="getStatusClass()">{{ resultado || 'SISTEMA LISTO' }}</h1>
+            <p class="text-muted">Confianza de la IA: <span class="fw-bold text-dark">{{ confianza }}%</span></p>
+          </div>
+          <div class="progress mb-4" style="height: 25px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                 [style.width]="confianza + '%'" [ngClass]="getBarClass()"></div>
+          </div>
+          <div class="alert alert-info shadow-sm border-0">
+            <strong><i class="bi bi-lightbulb me-2"></i>Recomendación Técnica:</strong><br>
+            {{ sugerencia }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Fila Secundaria: Guía Técnica y Normas -->
+  <div class="row mt-2">
+    <!-- Leyenda Térmica y Normas -->
+    <div class="col-md-8 mb-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-secondary text-white fw-bold">Información Técnica y Normativa</div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 border-end">
+              <h6 class="fw-bold text-primary small"><i class="bi bi-palette me-2"></i>LEYENDA TÉRMICA (FLIR)</h6>
+              <ul class="list-group list-group-flush x-small">
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 border-0">
+                  <span class="small">Púrpura / Azul</span> <span class="badge bg-primary">Congelación Óptima</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 border-0">
+                  <span class="small">Verde / Cian</span> <span class="badge bg-info text-dark">Estabilización</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center py-1 border-0">
+                  <span class="small">Rojo / Blanco</span> <span class="badge bg-danger">Riesgo / Descongelado</span>
+                </li>
+              </ul>
+            </div>
+            <div class="col-md-6 ps-4">
+              <h6 class="fw-bold text-success small"><i class="bi bi-journal-check me-2"></i>CUMPLIMIENTO DIGESA</h6>
+              <p style="font-size: 0.85rem;" class="text-muted mb-0">
+                Basado en la Norma Sanitaria de Almacenamiento. El núcleo debe alcanzar los <strong>-18°C</strong> para inhibir crecimiento bacteriano. El tiempo de detección límite es de 120 min.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exportación de Reportes -->
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-sm border-0 h-100 bg-white">
+        <div class="card-body text-center d-flex flex-column justify-content-center">
+          <h6 class="fw-bold mb-3 small">MÓDULO DE EXPORTACIÓN</h6>
+          <button class="btn btn-outline-danger btn-sm mb-2 w-100 shadow-sm">
+            <i class="bi bi-file-earmark-pdf me-2"></i>Generar Reporte PDF
+          </button>
+          <button class="btn btn-outline-secondary btn-sm w-100 shadow-sm">
+            <i class="bi bi-printer me-2"></i>Imprimir Ticket de Calidad
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Profesional -->
+  <footer class="text-center py-4 mt-2 text-muted border-top">
+    <small>Proyecto MeatScan AI | Facultad de Ingeniería de Sistemas - Universidad Nacional Federico Villarreal | 2026</small>
+  </footer>
+</div>

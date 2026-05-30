@@ -1,0 +1,39 @@
+<div class="vh-100 d-flex align-items-center justify-content-center bg-light">
+  <div class="card shadow-lg border-0 p-4" style="width: 400px; border-radius: 1.5rem;">
+    <div class="text-center mb-4">
+      <!-- Icono de usuario profesional -->
+      <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+        <i class="bi bi-person-fill-lock" style="font-size: 2.5rem;"></i>
+      </div>
+      <h2 class="fw-bold text-dark">MeatScan AI</h2>
+      <p class="text-muted">Inicie sesión para analizar muestras</p>
+    </div>
+
+    <form>
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Correo Electrónico</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-envelope text-primary"></i></span>
+          <input type="email" class="form-control border-start-0 rounded-end-pill" placeholder="usuario@unfv.pe">
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label small fw-bold">Contraseña</label>
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-key text-primary"></i></span>
+          <input type="password" class="form-control border-start-0 rounded-end-pill" placeholder="********">
+        </div>
+      </div>
+
+      <!-- Este botón nos manda al Dashboard -->
+      <button type="button" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm" routerLink="/dashboard">
+        INGRESAR AL SISTEMA
+      </button>
+    </form>
+    
+    <div class="text-center mt-4">
+      <small class="text-muted">Soporte Técnico: sistemas@unfv.edu.pe</small>
+    </div>
+  </div>
+</div>

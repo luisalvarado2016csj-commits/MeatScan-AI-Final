@@ -1,0 +1,6 @@
+node_modules/
+backend/venv/
+.angular/
+__pycache__/
+*.pyc
+*.h5

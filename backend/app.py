@@ -30,7 +30,7 @@ CLASS_NAMES = [
 
 # Forzamos CPU para que no busque CUDA de Nvidia de manera nativa en Windows
 device = torch.device("cpu")
-torch.set_num_threads(1) # Límite de hilos para evitar que Render se quede sin memoria RAM
+torch.set_num_threads(1) # Límite de hilos optimizado para Hugging Face Spaces
 
 def load_model():
     # Inicializa la estructura limpia de EfficientNet-B0
@@ -123,6 +123,6 @@ def predict():
         return jsonify({"tiempo": "ERROR", "confianza": 0, "error": str(e)}), 500
 
 if __name__ == '__main__':
-    # Lanzamos el backend limpio sin recargas forzadas de Debug
-    port = int(os.environ.get('PORT', 5000))
+    # Lanzamos el backend limpio en el puerto 7860 para Hugging Face Spaces (y conectarse a Vercel)
+    port = int(os.environ.get('PORT', 7860))
     app.run(host='0.0.0.0', port=port, debug=False)

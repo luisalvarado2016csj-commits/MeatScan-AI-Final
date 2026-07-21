@@ -1,4 +1,3 @@
-<!-- Barra de Navegación -->
 <nav class="navbar navbar-dark bg-dark shadow px-4">
   <span class="navbar-brand mb-0 h1">
     <i class="bi bi-snow2 me-2"></i>MeatScan AI - Plataforma de Control Térmico
@@ -9,50 +8,49 @@
 </nav>
 
 <div class="container mt-4">
-  <!-- 1. Estructura de Navegación (Tabs) -->
   <ul class="nav nav-tabs mb-4 border-0" id="myTab" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active fw-bold" data-bs-toggle="tab" type="button">
+    <li class="nav-item">
+      <button class="nav-link fw-bold text-dark" [class.active]="activeTab === 'panel'" (click)="changeTab('panel')">
         <i class="bi bi-speedometer2 me-2"></i>Panel de Control
       </button>
     </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link text-muted" data-bs-toggle="tab" type="button">
+    <li class="nav-item">
+      <button class="nav-link fw-bold text-dark" [class.active]="activeTab === 'historial'" (click)="changeTab('historial')">
         <i class="bi bi-archive me-2"></i>Historial de Análisis
       </button>
     </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link text-muted" data-bs-toggle="tab" type="button">
+    <li class="nav-item">
+      <button class="nav-link fw-bold text-dark" [class.active]="activeTab === 'documentacion'" (click)="changeTab('documentacion')">
         <i class="bi bi-file-earmark-text me-2"></i>Documentación
       </button>
     </li>
   </ul>
 
-  <!-- 2. Tarjetas de Resumen -->
   <div class="row mb-4 text-center">
     <div class="col-md-4">
       <div class="card shadow-sm border-0 p-3 bg-white">
         <h6 class="text-muted">Total Escaneos</h6>
-        <h2 class="fw-bold">128</h2>
+        <h2 class="fw-bold">{{ totalEscaneos }}</h2>
       </div>
     </div>
     <div class="col-md-4">
       <div class="card shadow-sm border-0 p-3 bg-white border-start border-danger border-4">
         <h6 class="text-muted">Alertas Recientes</h6>
-        <h2 class="fw-bold text-danger">5</h2>
+        <h2 class="fw-bold text-danger">{{ alertasRecientes }}</h2>
       </div>
     </div>
     <div class="col-md-4">
-      <div class="card shadow-sm border-0 p-3 bg-white border-start border-success border-4">
+      <div class="card shadow-sm border-0 p-3 bg-white border-start border-4"
+           [ngClass]="estadoModel === 'ACTIVO' ? 'border-success' : 'border-danger'">
         <h6 class="text-muted">Estado del Modelo</h6>
-        <h2 class="fw-bold text-success">Online (v1.0.2)</h2>
+        <h2 class="fw-bold" [ngClass]="estadoModel === 'ACTIVO' ? 'text-success' : 'text-danger'">
+          {{ estadoModel }}
+        </h2>
       </div>
     </div>
   </div>
 
-  <!-- 3. Fila Principal: Análisis e Imagen -->
-  <div class="row">
-    <!-- Panel de Imagen -->
+  <div *ngIf="activeTab === 'panel'" class="row">
     <div class="col-md-6 mb-4">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-primary text-white fw-bold">Captura Térmica (FLIR)</div>
@@ -61,44 +59,64 @@
             <img *ngIf="imagePreview" [src]="imagePreview" class="img-fluid rounded shadow-sm" style="max-height: 100%;">
             <i *ngIf="!imagePreview" class="bi bi-camera text-muted" style="font-size: 4rem;"></i>
           </div>
+
+          <div class="mb-3 text-start">
+            <label for="tiempoPlanta" class="form-label fw-bold small text-muted">TIEMPO ESTIMADO EN PLANTA (TEÓRICO):</label>
+            <select id="tiempoPlanta" class="form-select fw-bold" [(ngModel)]="tiempoEsperado" [disabled]="loading" style="border-radius: 10px; padding: 10px;">
+              <option *ngFor="let t of listaTiempos" [value]="t">{{ t }}</option>
+            </select>
+          </div>
+
           <input type="file" (change)="onFileSelected($event)" id="fileInput" hidden accept="image/*">
           <div class="d-grid gap-2">
-            <button class="btn btn-outline-dark fw-bold" onclick="document.getElementById('fileInput').click()">
+            <button class="btn btn-outline-dark fw-bold" onclick="document.getElementById('fileInput').click()" [disabled]="loading">
               <i class="bi bi-upload me-2"></i>Subir Imagen
             </button>
-            <button class="btn btn-success fw-bold" (click)="analizar()" [disabled]="!selectedFile">
-              <i class="bi bi-cpu me-2"></i>Ejecutar Predicción CNN
+            <button class="btn btn-success fw-bold" (click)="analizar()" [disabled]="!selectedFile || loading">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <i *ngIf="!loading" class="bi bi-cpu me-2"></i>{{ loading ? 'Procesando CNN...' : 'Ejecutar Predicción CNN' }}
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Panel de Resultados -->
     <div class="col-md-6 mb-4">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-dark text-white fw-bold">Resultados del Diagnóstico</div>
         <div class="card-body d-flex flex-column justify-content-center">
-          <div class="text-center py-4">
+          
+          <div class="text-center py-3">
             <h1 [class]="getStatusClass()">{{ resultado || 'SISTEMA LISTO' }}</h1>
-            <p class="text-muted">Confianza de la IA: <span class="fw-bold text-dark">{{ confianza }}%</span></p>
+            <p class="text-muted mb-2">Tiempo de Congelación Acumulado</p>
           </div>
-          <div class="progress mb-4" style="height: 25px;">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                 [style.width]="confianza + '%'" [ngClass]="getBarClass()"></div>
+
+          <div *ngIf="resultado && resultado !== 'ERROR'" class="alert shadow-sm border-0 p-3" 
+               [ngClass]="(tiempoEsperado !== resultado) ? 'alert-danger' : 'alert-success'">
+            <div class="d-flex align-items-center">
+              <i class="bi me-3 fs-3" [ngClass]="(tiempoEsperado !== resultado) ? 'bi-exclamation-triangle-fill text-danger' : 'bi-check-circle-fill text-success'"></i>
+              <div>
+                <strong class="d-block mb-1">
+                  {{ (tiempoEsperado !== resultado) ? '¡ALERTA CRÍTICA: DESVIACIÓN DETECTADA!' : 'CONGELACIÓN VALIDADA' }}
+                </strong>
+                <span class="small">
+                  {{ (tiempoEsperado !== resultado) 
+                    ? 'El lote no coincide con el tiempo teórico configurado. Riesgo de pérdida de dinero o falla mecánica en compresores.' 
+                    : 'Proceso estable. La red neuronal ratifica que la curva de congelación coincide con los registros de planta.' }}
+                </span>
+              </div>
+            </div>
           </div>
-          <div class="alert alert-info shadow-sm border-0">
+
+          <div class="alert alert-info shadow-sm border-0 mt-2">
             <strong><i class="bi bi-lightbulb me-2"></i>Recomendación Técnica:</strong><br>
             {{ sugerencia }}
           </div>
+          
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- 4. Fila Secundaria: Guía Técnica y Normas -->
-  <div class="row mt-2">
-    <!-- Leyenda Térmica y Normas -->
     <div class="col-md-8 mb-4">
       <div class="card shadow-sm border-0">
         <div class="card-header bg-secondary text-white fw-bold">Información Técnica y Normativa</div>
@@ -129,15 +147,14 @@
       </div>
     </div>
 
-    <!-- Exportación de Reportes -->
     <div class="col-md-4 mb-4">
       <div class="card shadow-sm border-0 h-100 bg-white">
         <div class="card-body text-center d-flex flex-column justify-content-center">
           <h6 class="fw-bold mb-3 small">MÓDULO DE EXPORTACIÓN</h6>
-          <button class="btn btn-outline-danger btn-sm mb-2 w-100 shadow-sm">
+          <button class="btn btn-outline-danger btn-sm mb-2 w-100 shadow-sm" (click)="generarReportePDF()">
             <i class="bi bi-file-earmark-pdf me-2"></i>Generar Reporte PDF
           </button>
-          <button class="btn btn-outline-secondary btn-sm w-100 shadow-sm">
+          <button class="btn btn-outline-secondary btn-sm w-100 shadow-sm" onclick="window.print()">
             <i class="bi bi-printer me-2"></i>Imprimir Ticket de Calidad
           </button>
         </div>
@@ -145,7 +162,82 @@
     </div>
   </div>
 
-  <!-- Footer Profesional -->
+  <div *ngIf="activeTab === 'historial'" class="card shadow-sm border-0 mb-4 animate__animated animate__fadeIn">
+    <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-clock-history me-2"></i>Registro de Auditorías de Almacén</span>
+      <span class="badge bg-secondary">{{ historial.length }} Registros</span>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 text-center">
+          <thead class="table-light text-secondary small">
+            <tr>
+              <th>ID Ticket</th>
+              <th>Fecha / Hora</th>
+              <th>Miniatura FLIR</th>
+              <th>Tiempo IA</th>
+              <th>Dictamen</th>
+              <th class="text-start">Informe Técnico de Operación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of historial">
+              <td class="fw-bold text-muted small">{{ item.id }}</td>
+              <td class="small">{{ item.fecha }}</td>
+              <td>
+                <div class="border rounded bg-light d-inline-block p-1" style="width: 70px; height: 50px;">
+                  <img *ngIf="item.imagen" [src]="item.imagen" class="img-fluid rounded" style="max-height: 100%; max-width: 100%;">
+                  <i *ngIf="!item.imagen" class="bi bi-image text-muted small"></i>
+                </div>
+              </td>
+              <td><span class="badge bg-dark fw-bold">{{ item.resultado }}</span></td>
+              <td>
+                <span class="badge" [ngClass]="item.estado === 'CRÍTICO' ? 'bg-danger' : 'bg-success'">
+                  {{ item.estado }}
+                </span>
+              </td>
+              <td class="text-start small text-muted" style="max-width: 300px;">{{ item.observacion }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="activeTab === 'documentacion'" class="row animate__animated animate__fadeIn">
+    <div class="col-md-4 mb-4">
+      <div class="card shadow-sm border-0 bg-dark text-white p-3 h-100">
+        <h5 class="fw-bold text-primary"><i class="bi bi-cpu me-2"></i>Arquitectura CNN</h5>
+        <hr class="bg-secondary">
+        <p class="small text-light-muted"> El modelo procesa matrices tridimensionales de imágenes térmicas FLIR (ej. 224x224x3).</p>
+        <ul class="x-small text-muted ps-3">
+          <li>Capas Convolucionales: Extracción de gradientes de color.</li>
+          <li>Max Pooling: Reducción de dimensionalidad espacial.</li>
+          <li>Dense Layers: Clasificación multiclase orientada a tiempo de frío.</li>
+        </ul>
+        <div class="mt-auto bg-secondary p-2 rounded text-center small text-white fw-bold">
+          Modelo Base: .H5 Keras/TensorFlow
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-8 mb-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-bottom fw-bold text-dark"><i class="bi bi-book me-2"></i>Manual de Operación de Auditoría</div>
+        <div class="card-body">
+          <h6 class="fw-bold text-success small">1. REQUISITO DE CARGA</h6>
+          <p class="text-muted small">Las imágenes deben cargarse en formato JPG/PNG limpias de anotaciones o marcas gráficas superpuestas extremas para asegurar una precisión matemática superior al 95% en la matriz de la CPU.</p>
+          
+          <h6 class="fw-bold text-danger small mt-3">2. PROTOCOLO ANTE PÉRDIDA DE CADENA DE FRÍO (0 MIN)</h6>
+          <p class="text-muted small">Si la plataforma activa el panel rojo de Alerta Crítica, el protocolo exige un muestreo físico directo con termómetro de punzón en el núcleo del lote y auditar los motores de los evaporadores de inmediato.</p>
+
+          <h6 class="fw-bold text-primary small mt-3">3. MIGRACIÓN TFLITE (Futuro Desarrollo)</h6>
+          <p class="text-muted small mb-0">Para despliegues en dispositivos móviles de planta, se recomienda la conversión del peso de la red convolucional a cuantización entera de 8 bits para ejecuciones inferiores a 50ms.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="text-center py-4 mt-2 text-muted border-top">
     <small>Proyecto MeatScan AI | Facultad de Ingeniería de Sistemas - Universidad Nacional Federico Villarreal | 2026</small>
   </footer>
